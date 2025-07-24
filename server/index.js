@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import bcrypt, { hash } from "bcrypt";
 import EmployeeModel from "./models/Employee.js";
 
 const app = express();
@@ -13,11 +14,14 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
   EmployeeModel.findOne({ email: email }).then((user) => {
     if (user) {
-      if (user.password === password) {
-        res.json("Success");
-      } else {
-        res.json("The password is incorrect");
-      }
+      bcrypt.compare(password, user.password, (err, response) => {
+        if (err) {
+          res.json("he password is incorrect");
+        }
+        if (response) {
+          res.json("Success");
+        }
+      });
     } else {
       res.json("Account not found");
     }
@@ -25,9 +29,16 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  EmployeeModel.create(req.body)
-    .then((employees) => res.json(employees))
-    .catch((err) => res.json(err));
+  const { name, email, password } = req.body;
+
+  bcrypt
+    .hash(password, 10)
+    .then((hash) => {
+      EmployeeModel.create({ name, email, password: hash })
+        .then((employees) => res.json(employees))
+        .catch((err) => res.json(err));
+    })
+    .catch((err) => console.log(err.message));
 });
 
 app.listen(3030, () => {
