@@ -16,7 +16,7 @@ app.post("/login", (req, res) => {
     if (user) {
       bcrypt.compare(password, user.password, (err, response) => {
         if (err) {
-          res.json("he password is incorrect");
+          res.json("The password is incorrect");
         }
         if (response) {
           res.json("Success");
